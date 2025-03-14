@@ -43,11 +43,9 @@
                     return response.json();
                 })
                 .then(data => {
+                    console.log(data); // レスポンスデータをログに出力
                     if (data.access_token) {
-                        // アクセストークンをローカルストレージに保存
                         localStorage.setItem('42_access_token', data.access_token);
-                        document.getElementById('auth-status').innerHTML = "<p>認証されました！</p>";
-                        // 認証後にリダイレクトする場合、以下のようにしてトップページに遷移
                         window.location.href = '/';
                     } else {
                         document.getElementById('auth-status').innerHTML = "<p>認証エラーが発生しました。</p>";
