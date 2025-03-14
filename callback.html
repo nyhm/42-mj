@@ -7,56 +7,30 @@
 </head>
 <body>
     <h1>42Tokyo 認証処理中...</h1>
-    <div id="auth-status">
-        <p>認証中...</p>
-    </div>
-
     <script>
-        // ローカルストレージに保存されたアクセストークンをチェック
-        const accessToken = localStorage.getItem('42_access_token');
-        
-        // アクセストークンが存在する場合
-        if (accessToken) {
-            document.getElementById('auth-status').innerHTML = "<p>認証されました！</p>";
-            // 必要に応じてここで他の操作を行う（例えばユーザー情報を表示するなど）
-        } else {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
 
-            // 認証コードが存在する場合、アクセストークンを取得
-            if (code) {
-                fetch('https://api.intra.42.fr/oauth/token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        grant_type: 'authorization_code',
-                        client_id: 'u-s4t2ud-03c5551343d5be2ce56c6b5f98a818b1ec42bf6a64bab0e9c3f35a3c8388b4b3',
-                        client_secret: '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',
-                        code: code,
-                        redirect_uri: 'https://42-mj.vercel.app/callback'
-                    })
+        if (code) {
+            fetch('https://api.intra.42.fr/oauth/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    grant_type: 'authorization_code',
+                    client_id: 'u-s4t2ud-03c5551343d5be2ce56c6b5f98a818b1ec42bf6a64bab0e9c3f35a3c8388b4b3',
+                    client_secret: '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',
+                    code: code,
+                    redirect_uri: 'https://42-mj.vercel.app/callback'
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.access_token) {
-                        // アクセストークンをローカルストレージに保存
-                        localStorage.setItem('42_access_token', data.access_token);
-                        document.getElementById('auth-status').innerHTML = "<p>認証されました！</p>";
-                        // 認証後にリダイレクトする場合、以下のようにしてトップページに遷移
-                        window.location.href = '/';
-                    } else {
-                        document.getElementById('auth-status').innerHTML = "<p>認証エラーが発生しました。</p>";
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('auth-status').innerHTML = "<p>認証エラーが発生しました。</p>";
-                    console.error('認証エラー:', error);
-                });
-            } else {
-                // 認証コードがなければ、再度42Tokyoの認証ページにリダイレクト
-                const authUrl = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-03c5551343d5be2ce56c6b5f98a818b1ec42bf6a64bab0e9c3f35a3c8388b4b3&redirect_uri=https://42-mj.vercel.app/callback&response_type=code`;
-                window.location.href = authUrl;
-            }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    localStorage.setItem('42_access_token', data.access_token);
+                    window.location.href = '/';
+                }
+            })
+            .catch(error => console.error('認証エラー:', error));
         }
     </script>
 </body>
