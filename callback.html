@@ -6,12 +6,15 @@
     <title>42Tokyo 認証</title>
 </head>
 <body>
-    <h1>42Tokyo 認証処理中...</h1>
+    <h1 id="status">認証処理中...</h1> <!-- 初期表示は「認証処理中...」 -->
+
     <script>
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
+        const statusElement = document.getElementById('status');
 
         if (code) {
+            // 認証コードを使用してトークンを取得する
             fetch('https://api.intra.42.fr/oauth/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -26,11 +29,30 @@
             .then(response => response.json())
             .then(data => {
                 if (data.access_token) {
+                    // トークンが取得できた場合
                     localStorage.setItem('42_access_token', data.access_token);
-                    window.location.href = '/';
+                    statusElement.textContent = '認証成功！';
+                    // 認証後に他の処理を行うこともできます（例: リダイレクト）
+                    setTimeout(() => {
+                        window.location.href = '/'; // トークン取得後、トップページにリダイレクト
+                    }, 2000); // 2秒後にリダイレクト
+                } else {
+                    // トークンが取得できなかった場合
+                    statusElement.textContent = '認証失敗: トークンが取得できませんでした。';
                 }
             })
-            .catch(error => console.error('認証エラー:', error));
+            .catch(error => {
+                console.error('認証エラー:', error);
+                statusElement.textContent = '認証エラーが発生しました。';
+            });
+        } else {
+            // 認証コードがない場合はエラーメッセージを表示
+            statusElement.textContent = '認証コードが見つかりませんでした。';
+        }
+
+        // もし認証トークンが既に保存されている場合は、認証済みとして表示を切り替え
+        if (localStorage.getItem('42_access_token')) {
+            statusElement.textContent = 'すでに認証されています。';
         }
     </script>
 </body>
