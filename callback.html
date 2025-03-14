@@ -7,8 +7,8 @@
 </head>
 <body>
     <h1>42Tokyo 認証処理中...</h1>
+    
     <div id="user-info" style="display: none;">
-        <h2>ユーザー情報</h2>
         <p id="username"></p>
         <p id="email"></p>
     </div>
@@ -17,56 +17,73 @@
         // URLパラメータから認証コードを取得
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
-        
-        // コードが取得できたらトークンリクエスト
+
+        // 認証コードがある場合はアクセストークンを取得
         if (code) {
+            console.log("認証コード:", code);  // ログにコードを表示
+
+            // アクセストークンを取得
             fetch('https://api.intra.42.fr/oauth/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     grant_type: 'authorization_code',
-                    client_id: 'u-s4t2ud-03c5551343d5be2ce56c6b5f98a818b1ec42bf6a64bab0e9c3f35a3c8388b4b3',
-                    client_secret: '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',
+                    client_id: 'u-s4t2ud-03c5551343d5be2ce56c6b5f98a818b1ec42bf6a64bab0e9c3f35a3c8388b4b3',  // Client ID
+                    client_secret: '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',  // Client Secret
                     code: code,
-                    redirect_uri: 'https://42-mj.vercel.app/callback'  // 実際に設定したリダイレクトURL
+                    redirect_uri: 'https://42-mj.vercel.app/callback'  // リダイレクトURI
                 })
             })
             .then(response => response.json())
             .then(data => {
+                console.log("アクセストークン取得レスポンス:", data);  // レスポンスログ
+
                 if (data.access_token) {
                     // アクセストークンをローカルストレージに保存
                     localStorage.setItem('42_access_token', data.access_token);
-
-                    // ユーザー情報を取得
-                    fetchUserData(data.access_token);
+                    fetchUserData(data.access_token);  // ユーザー情報を取得
                 } else {
+                    // アクセストークンが取得できない場合
                     console.error('アクセストークンの取得に失敗:', data);
                     alert('認証に失敗しました。');
                 }
             })
             .catch(error => {
+                // 認証リクエストエラー
                 console.error('認証エラー:', error);
-                alert('認証中にエラーが発生しました。');
+                alert('認証エラーが発生しました。');
             });
+        } else {
+            // 認証コードがない場合、エラー処理
+            console.error('認証コードが見つかりませんでした。');
+            alert('認証コードが無効です。');
         }
 
-        // ユーザー情報を取得する関数
+        // ユーザー情報を取得
         function fetchUserData(accessToken) {
             fetch('https://api.intra.42.fr/v2/me', {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`
+                    'Authorization': `Bearer ${accessToken}`  // Bearer トークンで認証
                 }
             })
             .then(response => response.json())
             .then(userData => {
-                console.log('ユーザーデータ:', userData);
-                // ユーザー情報を表示
-                document.getElementById('user-info').style.display = 'block';
-                document.getElementById('username').textContent = `ユーザー名: ${userData.login}`;
-                document.getElementById('email').textContent = `メール: ${userData.email}`;
+                console.log("ユーザー情報:", userData);  // ユーザーデータのログ
+
+                if (userData.login && userData.email) {
+                    // ユーザー情報が正常に取得できた場合
+                    document.getElementById('user-info').style.display = 'block';
+                    document.getElementById('username').textContent = `ユーザー名: ${userData.login}`;
+                    document.getElementById('email').textContent = `メール: ${userData.email}`;
+                } else {
+                    // ユーザー情報が不足している場合
+                    console.error('ユーザー情報の取得に失敗:', userData);
+                    alert('ユーザー情報の取得に失敗しました。');
+                }
             })
             .catch(error => {
+                // ユーザー情報取得エラー
                 console.error('ユーザー情報の取得に失敗:', error);
                 alert('ユーザー情報の取得に失敗しました。');
             });
