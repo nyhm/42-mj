@@ -1,0 +1,9 @@
+{
+    "routes": [
+      {
+        "src": "/callback",
+        "dest": "/callback.html"
+      }
+    ]
+  }
+  
