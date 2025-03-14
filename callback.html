@@ -43,12 +43,14 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log(data); // レスポンスデータをログに出力
+                    console.log('APIレスポンス:', data); // レスポンスデータをログに記録
                     if (data.access_token) {
                         localStorage.setItem('42_access_token', data.access_token);
                         window.location.href = '/';
                     } else {
-                        document.getElementById('auth-status').innerHTML = "<p>認証エラーが発生しました。</p>";
+                        // エラーメッセージを表示する
+                        console.error('アクセストークンがありません:', data);
+                        document.getElementById('auth-status').innerHTML = "<p>認証エラーが発生しました。<br>詳細: " + data.error_description + "</p>";
                     }
                 })
                 .catch(error => {
