@@ -36,7 +36,12 @@
                         redirect_uri: 'https://42-mj.vercel.app/callback'
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('APIエラー: ' + response.status);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.access_token) {
                         // アクセストークンをローカルストレージに保存
