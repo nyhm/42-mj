@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>42Tokyo 認証</title>
+</head>
+<body>
+    <h1>42Tokyo 認証処理中...</h1>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+
+        if (code) {
+            fetch('https://api.intra.42.fr/oauth/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    grant_type: 'authorization_code',
+                    client_id: 'u-s4t2ud-03c5551343d5be2ce56c6b5f98a818b1ec42bf6a64bab0e9c3f35a3c8388b4b3',
+                    client_secret: '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',
+                    code: code,
+                    redirect_uri: 'https://your-vercel-project.vercel.app/callback'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    localStorage.setItem('42_access_token', data.access_token);
+                    window.location.href = '/';
+                }
+            })
+            .catch(error => console.error('認証エラー:', error));
+        }
+    </script>
+</body>
+</html>
