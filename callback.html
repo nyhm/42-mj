@@ -6,53 +6,70 @@
     <title>42Tokyo 認証</title>
 </head>
 <body>
-    <h1 id="status">認証処理中...</h1> <!-- 初期表示は「認証処理中...」 -->
+    <h1>42Tokyo 認証処理中...</h1>
+    <div id="user-info" style="display: none;">
+        <h2>ユーザー情報</h2>
+        <p id="username"></p>
+        <p id="email"></p>
+    </div>
 
     <script>
+        // URLパラメータから認証コードを取得
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
-        const statusElement = document.getElementById('status');
-
+        
+        // コードが取得できたらトークンリクエスト
         if (code) {
-            // 認証コードを使用してトークンを取得する
             fetch('https://api.intra.42.fr/oauth/token', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
                     grant_type: 'authorization_code',
                     client_id: 'u-s4t2ud-03c5551343d5be2ce56c6b5f98a818b1ec42bf6a64bab0e9c3f35a3c8388b4b3',
                     client_secret: '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',
                     code: code,
-                    redirect_uri: 'https://42-mj.vercel.app/callback'
+                    redirect_uri: 'https://42-mj.vercel.app/callback'  // 実際に設定したリダイレクトURL
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.access_token) {
-                    // トークンが取得できた場合
+                    // アクセストークンをローカルストレージに保存
                     localStorage.setItem('42_access_token', data.access_token);
-                    statusElement.textContent = '認証成功！';
-                    // 認証後に他の処理を行うこともできます（例: リダイレクト）
-                    setTimeout(() => {
-                        window.location.href = '/'; // トークン取得後、トップページにリダイレクト
-                    }, 2000); // 2秒後にリダイレクト
+
+                    // ユーザー情報を取得
+                    fetchUserData(data.access_token);
                 } else {
-                    // トークンが取得できなかった場合
-                    statusElement.textContent = '認証失敗: トークンが取得できませんでした。';
+                    console.error('アクセストークンの取得に失敗:', data);
+                    alert('認証に失敗しました。');
                 }
             })
             .catch(error => {
                 console.error('認証エラー:', error);
-                statusElement.textContent = '認証エラーが発生しました。';
+                alert('認証中にエラーが発生しました。');
             });
-        } else {
-            // 認証コードがない場合はエラーメッセージを表示
-            statusElement.textContent = '認証コードが見つかりませんでした。';
         }
 
-        // もし認証トークンが既に保存されている場合は、認証済みとして表示を切り替え
-        if (localStorage.getItem('42_access_token')) {
-            statusElement.textContent = 'すでに認証されています。';
+        // ユーザー情報を取得する関数
+        function fetchUserData(accessToken) {
+            fetch('https://api.intra.42.fr/v2/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+            .then(response => response.json())
+            .then(userData => {
+                console.log('ユーザーデータ:', userData);
+                // ユーザー情報を表示
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('username').textContent = `ユーザー名: ${userData.login}`;
+                document.getElementById('email').textContent = `メール: ${userData.email}`;
+            })
+            .catch(error => {
+                console.error('ユーザー情報の取得に失敗:', error);
+                alert('ユーザー情報の取得に失敗しました。');
+            });
         }
     </script>
 </body>
